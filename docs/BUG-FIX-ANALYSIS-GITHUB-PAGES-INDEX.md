@@ -789,4 +789,138 @@ See the current version in the repository for the complete fixed implementation.
 
 ---
 
+---
+
+## Issue #3: Redundant Title Prefixes in Report Cards
+
+**Date**: 2025-11-17
+**Severity**: Medium (cosmetic/UX issue)
+**Status**: ✅ Fixed
+
+### Problem Description
+
+Report card titles displayed redundant prefixes, making them verbose and unprofessional:
+
+**Examples of Redundant Titles**:
+- "Sprint 02: **Sprint 02:** Franchise Development & Multi-Location Expansion"
+- "Sprint 03: **Sprint 03 Strategic Report:** Healthcare & Government ID Credentialing Solutions"
+- "Sprint 01: **Strategic Research Report:** Corporate Headshot-as-a-Service B2B Program"
+
+The bold portions are redundant because:
+1. The card already shows "Sprint XX:" in the `<h3>` tag
+2. "Strategic Report" or "Strategic Research Report" adds no value to the user
+3. Creates visual clutter and reduces scannability
+
+### Root Cause
+
+The script extracted titles directly from the H1 heading in the markdown files without cleaning them:
+
+```python
+# BEFORE (line 54)
+title_match = re.search(r'^#\s+(.+?)(?:\s+-\s+Final Report)?$', content, re.MULTILINE)
+title = title_match.group(1).strip() if title_match else "Unknown Title"
+
+# Title then used as-is:
+return SprintReport(sprint_number, title, score, recommendation, tam, summary)
+```
+
+This resulted in titles like:
+- "Sprint 02: Sprint 02: Franchise Development..." (from H1: `# Sprint 02: Franchise Development...`)
+- "Sprint 03 Strategic Report: Healthcare..." (from H1: `# Sprint 03 Strategic Report: Healthcare...`)
+
+**Why This Happened**:
+- Report markdown files use different H1 heading formats across sprints
+- Some include "Sprint XX:" in the H1, others don't
+- Some include "Strategic Report:" or "Strategic Research Report:"
+- No normalization/cleanup logic existed
+
+### Solution
+
+Added title cleanup logic after extraction to remove redundant prefixes:
+
+```python
+# AFTER (lines 109-118)
+# Clean up title: remove redundant "Sprint XX:" prefix and other repetitions
+title = re.sub(r'^Sprint\s+\d+:\s*', '', title)  # Remove "Sprint XX:" prefix
+title = re.sub(r'^Sprint\s+\d+\s+', '', title)   # Remove "Sprint XX " prefix
+title = re.sub(r'^Strategic\s+Research\s+Report:\s*', '', title)  # Remove "Strategic Research Report:"
+title = re.sub(r'^Strategic\s+Report:\s*', '', title)  # Remove "Strategic Report:"
+title = title.strip()
+```
+
+**Transformation Examples**:
+
+| Before Cleanup | After Cleanup |
+|----------------|---------------|
+| Sprint 02: Franchise Development... | Franchise Development... |
+| Sprint 03 Strategic Report: Healthcare... | Healthcare... |
+| Strategic Research Report: Corporate Headshot... | Corporate Headshot... |
+
+The script still prepends "Sprint XX:" when generating the HTML (line 125), so the final display is:
+- "Sprint 01: Corporate Headshot-as-a-Service B2B Program"
+- "Sprint 02: Franchise Development & Multi-Location Expansion"
+- "Sprint 03: Healthcare & Government ID Credentialing Solutions"
+
+### Why This Matters for the Template
+
+**Problem**: Different users will write H1 headings in different formats:
+- Some will include "Sprint XX:" (following the template examples)
+- Some will include "Strategic Report:" or variations
+- Some will use custom prefixes specific to their domain
+
+**Without title cleanup**, the index page will show inconsistent, redundant titles that look unprofessional.
+
+**With title cleanup**, the script normalizes all titles to a clean, consistent format regardless of the source markdown heading style.
+
+### Recommendations for Template Repository
+
+1. **Update `scripts/generate-docs-index.py`** with the title cleanup regex (lines 109-118)
+
+2. **Document in script README** that title cleanup happens automatically:
+   ```markdown
+   ### Title Normalization
+
+   The script automatically cleans redundant prefixes from report titles:
+   - Removes "Sprint XX:" prefix (added back by the script)
+   - Removes "Strategic Report:" and "Strategic Research Report:" prefixes
+   - Trims whitespace
+
+   This ensures consistent, professional titles regardless of H1 heading format in source markdown files.
+   ```
+
+3. **Add to report template guidelines**:
+   ```markdown
+   ## Report H1 Heading Best Practices
+
+   Your H1 heading can use any format - the index generator will normalize it:
+
+   ✅ Good options:
+   - `# Corporate Headshot-as-a-Service B2B Program`
+   - `# Sprint 01: Corporate Headshot-as-a-Service B2B Program`
+   - `# Strategic Report: Corporate Headshot-as-a-Service B2B Program`
+
+   All will display as: "Sprint 01: Corporate Headshot-as-a-Service B2B Program" on the index page.
+
+   ❌ Avoid overly verbose headings:
+   - `# Sprint 01: Strategic Research Report: Final Analysis Report: Corporate Headshot...`
+   ```
+
+4. **Add test case** to verify title cleanup:
+   ```python
+   def test_title_cleanup():
+       """Test that redundant prefixes are removed from titles"""
+       test_cases = [
+           ("Sprint 02: Sprint 02: Franchise Development", "Franchise Development"),
+           ("Sprint 03 Strategic Report: Healthcare", "Healthcare"),
+           ("Strategic Research Report: Corporate Headshot", "Corporate Headshot"),
+           ("Just A Title", "Just A Title"),  # No cleanup needed
+       ]
+
+       for input_title, expected_output in test_cases:
+           cleaned = clean_title(input_title)
+           assert cleaned == expected_output, f"Expected {expected_output}, got {cleaned}"
+   ```
+
+---
+
 **End of Analysis**
