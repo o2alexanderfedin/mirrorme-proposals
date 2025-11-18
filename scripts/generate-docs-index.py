@@ -150,28 +150,28 @@ def update_index_html(reports: List[SprintReport], template_path: Path, output_p
     # Generate report cards HTML
     report_cards_html = '\n'.join(generate_report_card_html(r) for r in reports)
 
-    # Update stats
+    # Update stats (handle both zero and non-zero existing values)
     template = re.sub(
-        r'<span class="stat-number">0</span>\s*<div class="stat-label">Strategic Opportunities</div>',
+        r'<span class="stat-number">\d+</span>\s*<div class="stat-label">Strategic Opportunities</div>',
         f'<span class="stat-number">{total_reports}</span>\n                    <div class="stat-label">Strategic Opportunities</div>',
         template
     )
 
     template = re.sub(
-        r'<span class="stat-number" id="total-tam">\$0 B\+</span>',
+        r'<span class="stat-number" id="total-tam">\$[\d.]+\s*[BMK]\+?</span>',
         f'<span class="stat-number" id="total-tam">${total_tam:.1f}B+</span>',
         template
     )
 
     template = re.sub(
-        r'<span class="stat-number" id="avg-score">0/100</span>',
+        r'<span class="stat-number" id="avg-score">\d+/100</span>',
         f'<span class="stat-number" id="avg-score">{avg_score:.0f}/100</span>',
         template
     )
 
-    # Update reports grid
+    # Update reports grid (replace existing content or empty div)
     template = re.sub(
-        r'<div class="reports-grid">\s*</div>',
+        r'<div class="reports-grid">.*?</div>',
         f'<div class="reports-grid">{report_cards_html}\n            </div>',
         template,
         flags=re.DOTALL
