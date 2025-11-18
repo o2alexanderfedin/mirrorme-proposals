@@ -13,13 +13,14 @@ from typing import Dict, List, Optional
 # Report data structure
 class SprintReport:
     def __init__(self, sprint_number: str, title: str, score: float,
-                 recommendation: str, tam: str, summary: str):
+                 recommendation: str, tam: str, summary: str, filename_base: str):
         self.sprint_number = sprint_number
         self.title = title
         self.score = score
         self.recommendation = recommendation
         self.tam = tam
         self.summary = summary
+        self.filename_base = filename_base
 
 def extract_tam_value(tam_text: str) -> float:
     """Extract numeric TAM value in billions from text like '$720M' or '$440M-$880M'"""
@@ -43,11 +44,12 @@ def parse_sprint_report(filepath: Path) -> Optional[SprintReport]:
     try:
         content = filepath.read_text()
 
-        # Extract sprint number from filename (e.g., "02-franchise-development-program-report.md")
+        # Extract sprint number and filename base (e.g., "02-franchise-development-program-report.md")
         match = re.match(r'(\d+)-(.+)-report\.md', filepath.name)
         if not match:
             return None
         sprint_number = match.group(1)
+        filename_base = match.group(2)  # e.g., "corporate-headshot-as-a-service"
 
         # Extract title (first h1 heading)
         title_match = re.search(r'^#\s+(.+?)(?:\s+-\s+Final Report)?$', content, re.MULTILINE)
@@ -117,7 +119,7 @@ def parse_sprint_report(filepath: Path) -> Optional[SprintReport]:
         title = re.sub(r'^Strategic\s+Report:\s*', '', title)  # Remove "Strategic Report:"
         title = title.strip()
 
-        return SprintReport(sprint_number, title, score, recommendation, tam, summary)
+        return SprintReport(sprint_number, title, score, recommendation, tam, summary, filename_base)
 
     except Exception as e:
         print(f"Error parsing {filepath}: {e}")
@@ -128,8 +130,8 @@ def generate_report_card_html(report: SprintReport) -> str:
     # Map recommendation to CSS class
     rec_class = report.recommendation.lower().replace(' ', '-')
 
-    # Create slug from sprint number for file linking
-    sprint_slug = f"{report.sprint_number}-{report.title.lower().replace(' ', '-').replace('&', 'and').replace(':', '')}"
+    # Use actual filename base from the markdown file
+    file_base = f"{report.sprint_number}-{report.filename_base}"
 
     return f'''
                 <div class="report-card">
@@ -143,10 +145,10 @@ def generate_report_card_html(report: SprintReport) -> str:
                         <strong>Market Size:</strong> {report.tam}
                     </div>
                     <div class="report-links">
-                        <a href="reports/{sprint_slug}-report.html" class="btn btn-primary">HTML</a>
-                        <a href="reports/{sprint_slug}-report.pdf" class="btn btn-secondary">PDF</a>
-                        <a href="reports/{sprint_slug}-report.docx" class="btn btn-secondary">DOCX</a>
-                        <a href="reports/{sprint_slug}-report.md" class="btn btn-secondary">Markdown</a>
+                        <a href="reports/{file_base}-report.html" class="btn btn-primary">HTML</a>
+                        <a href="reports/{file_base}-report.pdf" class="btn btn-secondary">PDF</a>
+                        <a href="reports/{file_base}-report.docx" class="btn btn-secondary">DOCX</a>
+                        <a href="reports/{file_base}-report.md" class="btn btn-secondary">Markdown</a>
                     </div>
                 </div>
 '''
