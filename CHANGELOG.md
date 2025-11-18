@@ -56,9 +56,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated score-opportunity command with correct table examples
   - Enforces blank lines before/after tables for proper HTML/PDF rendering
 
-### Problem Solved
+### Tables - Problem Solved
 
 **Before** (incorrect - renders as text):
+
 ```markdown
 Scoring Summary:
 | Category | Weight | Score |
@@ -66,9 +67,11 @@ Scoring Summary:
 | Market   | 25%    | 93.3  |
 Next paragraph.
 ```
+
 Result: Pipes visible as plain text in HTML/PDF exports
 
 **After** (correct - renders as table):
+
 ```markdown
 Scoring Summary:
 
@@ -78,9 +81,11 @@ Scoring Summary:
 
 Next paragraph.
 ```
+
 Result: Proper HTML table in exports
 
 **Rules Enforced**:
+
 1. Blank line before table
 2. Blank line after table
 3. Proper markdown syntax with pipes and dashes
@@ -101,10 +106,11 @@ Result: Proper HTML table in exports
   - CI/CD workflow automatically installs filter
   - Graceful fallback if filter not available (code blocks remain)
 
-### Problem Solved
+### Mermaid - Problem Solved
 
 **Before**: Mermaid diagrams in PDFs appeared as raw code blocks
-```
+
+```mermaid
 graph TB
     A[Component] --> B[Other]
 ```
@@ -112,6 +118,7 @@ graph TB
 **After**: Diagrams render as professional images in PDFs
 
 **Installation** (for local development):
+
 ```bash
 npm install -g @mermaid-js/mermaid-cli mermaid-filter
 ```
@@ -129,15 +136,18 @@ npm install -g @mermaid-js/mermaid-cli mermaid-filter
   - Updated solution-architect skill with proper list formatting requirements
   - Updated report-generator skill with list syntax examples
 
-### Problem Solved
+### Lists - Problem Solved
 
 **Before** (incorrect - renders as paragraph):
+
 ```markdown
 Key Decisions: 1. Item one 2. Item two 3. Item three
 ```
+
 Renders as: "Key Decisions: 1. Item one 2. Item two 3. Item three"
 
 **After** (correct - renders as list):
+
 ```markdown
 **Key Decisions**:
 
@@ -145,6 +155,7 @@ Renders as: "Key Decisions: 1. Item one 2. Item two 3. Item three"
 2. **Item Two**: Description
 3. **Item Three**: Description
 ```
+
 Renders as proper numbered list with proper spacing and formatting.
 
 **Impact**: All architectural decisions, key findings, performance targets, and numbered content now render as scannable lists instead of dense paragraphs.
@@ -268,7 +279,7 @@ Renders correctly in GitHub, HTML, and PDF.
   - Defines when to use bullets, numbered lists, paragraphs, and <br/> tags
   - Updated report-generator skill with text readability requirements
 
-### Problem Solved
+### Readability - Problem Solved
 
 Dense paragraphs are impossible for executives to scan:
 
@@ -276,20 +287,24 @@ Dense paragraphs are impossible for executives to scan:
 (200+ words, single paragraph, unreadable)
 
 **After**: Bullet points with clear structure:
+
 - Market Growth: $1.32B → $3.11B, 10% CAGR
 - Technology Maturation: Publications increased 10x
 - Key Drivers: DOE investment, private sector, materials science
+
 (Scannable, professional, executive-friendly)
 
 ### Guidelines Added
 
 **General Principles**:
+
 1. Break up dense paragraphs
 2. Maximum 3-4 sentences per paragraph
 3. Use visual hierarchy (headings, lists)
 4. Prioritize scannability for busy executives
 
 **When to use each format**:
+
 - Bullet points: 3+ distinct items, features, benefits
 - Numbered lists: Sequential steps, priorities, timelines
 - Paragraphs: Narrative flow, 1-2 sentences, cause/effect
@@ -308,7 +323,7 @@ Dense paragraphs are impossible for executives to scan:
   - Mandates `<br/>` tags for line breaks within table cells
   - Limits tables to 3-5 columns maximum for optimal readability
 
-### Problem Solved
+### Table Formatting - Problem Solved
 
 Tables with many columns wrapped badly and became unreadable. Now using `<br/>` tags and limiting columns creates professional, scannable tables.
 
