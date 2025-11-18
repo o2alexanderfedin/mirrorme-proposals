@@ -106,6 +106,17 @@ def parse_sprint_report(filepath: Path) -> Optional[SprintReport]:
         summary = re.sub(r'\[(.+?)\]\(.+?\)', r'\1', summary)  # Remove links
         summary = re.sub(r'<br\s*/?>', ' ', summary)  # Remove line breaks
 
+        # Clean up title: remove redundant "Sprint XX:" prefix and other repetitions
+        # Examples:
+        #   "Sprint 02: Sprint 02: Franchise..." -> "Franchise..."
+        #   "Sprint 03 Strategic Report: Healthcare..." -> "Healthcare..."
+        #   "Strategic Research Report: Corporate..." -> "Corporate..."
+        title = re.sub(r'^Sprint\s+\d+:\s*', '', title)  # Remove "Sprint XX:" prefix
+        title = re.sub(r'^Sprint\s+\d+\s+', '', title)   # Remove "Sprint XX " prefix
+        title = re.sub(r'^Strategic\s+Research\s+Report:\s*', '', title)  # Remove "Strategic Research Report:"
+        title = re.sub(r'^Strategic\s+Report:\s*', '', title)  # Remove "Strategic Report:"
+        title = title.strip()
+
         return SprintReport(sprint_number, title, score, recommendation, tam, summary)
 
     except Exception as e:
