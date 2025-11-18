@@ -132,8 +132,9 @@ def generate_report_card_html(report: SprintReport) -> str:
                         <strong>Market Size:</strong> {report.tam}
                     </div>
                     <div class="report-links">
-                        <a href="reports/{sprint_slug}-report.html" class="btn btn-primary">View Report</a>
-                        <a href="../reports/{sprint_slug}-report.pdf" class="btn btn-secondary">Download PDF</a>
+                        <a href="reports/{sprint_slug}-report.html" class="btn btn-primary">View HTML</a>
+                        <a href="../reports/{sprint_slug}-report.pdf" class="btn btn-secondary">PDF</a>
+                        <a href="../reports/{sprint_slug}-report.md" class="btn btn-secondary">Markdown</a>
                     </div>
                 </div>
 '''
@@ -170,9 +171,13 @@ def update_index_html(reports: List[SprintReport], template_path: Path, output_p
     )
 
     # Update reports grid (replace existing content or empty div)
+    # Use a more specific pattern that captures the full reports-grid section
+    # including all nested report-card divs until the closing </div> at the same indentation level
+    grid_pattern = r'(<div class="reports-grid">).*?(</div>\s*</main>)'
+    replacement = r'\1' + report_cards_html + r'\n            \2'
     template = re.sub(
-        r'<div class="reports-grid">.*?</div>',
-        f'<div class="reports-grid">{report_cards_html}\n            </div>',
+        grid_pattern,
+        replacement,
         template,
         flags=re.DOTALL
     )
