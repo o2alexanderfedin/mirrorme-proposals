@@ -133,7 +133,7 @@ def generate_report_card_html(report: SprintReport) -> str:
 
     return f'''
                 <div class="report-card">
-                    <h3>Sprint {report.sprint_number}: {report.title}</h3>
+                    <h3>{report.title}</h3>
                     <div>
                         <span class="score-badge">Score: {report.score}/100</span>
                         <span class="recommendation {rec_class}">{report.recommendation}</span>
@@ -143,8 +143,9 @@ def generate_report_card_html(report: SprintReport) -> str:
                         <strong>Market Size:</strong> {report.tam}
                     </div>
                     <div class="report-links">
-                        <a href="reports/{sprint_slug}-report.html" class="btn btn-primary">View HTML</a>
+                        <a href="reports/{sprint_slug}-report.html" class="btn btn-primary">HTML</a>
                         <a href="../reports/{sprint_slug}-report.pdf" class="btn btn-secondary">PDF</a>
+                        <a href="../reports/{sprint_slug}-report.docx" class="btn btn-secondary">DOCX</a>
                         <a href="../reports/{sprint_slug}-report.md" class="btn btn-secondary">Markdown</a>
                     </div>
                 </div>
