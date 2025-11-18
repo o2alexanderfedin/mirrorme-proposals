@@ -923,4 +923,194 @@ The script still prepends "Sprint XX:" when generating the HTML (line 125), so t
 
 ---
 
+## Issue #4: Button Layout Problems in Report Cards
+
+**Date Discovered**: 2025-11-17 (after v1.0.0 release)
+**Location**: `docs/index.html` (CSS styles)
+**Severity**: Medium (UI/UX issue affecting usability)
+**Status**: ✅ Fixed
+
+### Problem Description
+
+Report cards displayed 4 download buttons (HTML, PDF, DOCX, Markdown) in a single row using flexbox with `flex: 1` sizing. This caused buttons to become too narrow, resulting in:
+- Text wrapping inside buttons
+- Buttons appearing cut off
+- Poor readability on narrower cards
+- Inconsistent button sizes
+
+**Visual Impact**: Buttons were cramped and difficult to read/click, especially on cards with longer titles or narrower viewports.
+
+### Root Cause
+
+**Location**: Lines 182-196 (original `docs/index.html`)
+
+**Problem**: Using flexbox with `flex: 1` forced 4 buttons into equal widths, which became too narrow:
+
+```css
+/* BEFORE (BROKEN) */
+.report-links {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn {
+    flex: 1;  /* Forces equal width - too narrow with 4 buttons */
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    text-align: center;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    /* No white-space control - text wraps */
+}
+```
+
+**Why This Failed**:
+1. **Four buttons in one row**: `flex: 1` with 4 items = each button gets 25% width
+2. **No minimum width constraint**: Buttons could become arbitrarily narrow
+3. **Text wrapping**: No `white-space: nowrap` meant text wrapped inside narrow buttons
+4. **No responsive layout**: Mobile devices would have even narrower buttons
+
+### Solution
+
+**Location**: Lines 182-198 (fixed `docs/index.html`)
+
+Changed from flexbox to CSS Grid with 2x2 layout:
+
+```css
+/* AFTER (FIXED) */
+.report-links {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);  /* 2 columns on desktop */
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn {
+    padding: 12px 20px;  /* Increased padding for better click targets */
+    border-radius: 6px;
+    text-decoration: none;
+    text-align: center;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    white-space: nowrap;  /* Prevent text wrapping */
+    font-size: 0.9em;     /* Slightly smaller text */
+}
+```
+
+**Mobile Responsiveness** (lines 251-253):
+
+```css
+@media (max-width: 768px) {
+    .report-links {
+        grid-template-columns: 1fr;  /* Single column on mobile */
+    }
+}
+```
+
+**Improvements**:
+1. **2x2 Grid Layout**: Each button gets 50% width (2 columns) instead of 25%
+2. **No Text Wrapping**: `white-space: nowrap` keeps button text on single line
+3. **Better Click Targets**: Increased padding from 10px to 12px
+4. **Mobile-First**: Single column on mobile devices (stacked buttons)
+5. **Consistent Sizing**: Grid ensures predictable button widths
+
+### Verification
+
+**Before Fix**:
+- ❌ Buttons text wrapping ("Markdown" → "Mark-\ndown")
+- ❌ Buttons too narrow to read comfortably
+- ❌ Inconsistent button sizes
+- ❌ Poor mobile experience
+
+**After Fix**:
+- ✅ Clean 2x2 grid on desktop (HTML | PDF, DOCX | Markdown)
+- ✅ No text wrapping with `white-space: nowrap`
+- ✅ Consistent, readable button sizes
+- ✅ Single column on mobile for easy tapping
+
+### Recommendations for Template Repository
+
+1. **Use CSS Grid for button layouts** when displaying 3+ buttons:
+   ```css
+   /* ✅ RECOMMENDED: Grid layout for multiple buttons */
+   .action-buttons {
+       display: grid;
+       grid-template-columns: repeat(2, 1fr);  /* 2 columns */
+       gap: 10px;
+   }
+
+   /* ❌ AVOID: Flexbox with flex: 1 for 4+ buttons */
+   .action-buttons {
+       display: flex;
+       gap: 10px;
+   }
+   .action-buttons > * {
+       flex: 1;  /* Too narrow with many buttons */
+   }
+   ```
+
+2. **Always include `white-space: nowrap`** for button text to prevent wrapping:
+   ```css
+   .btn {
+       white-space: nowrap;
+   }
+   ```
+
+3. **Provide mobile-responsive layouts**:
+   ```css
+   @media (max-width: 768px) {
+       .action-buttons {
+           grid-template-columns: 1fr;  /* Stack on mobile */
+       }
+   }
+   ```
+
+4. **Test button layouts** with different viewport widths:
+   - Desktop (1200px+): 2-4 columns
+   - Tablet (768px-1199px): 2 columns
+   - Mobile (<768px): 1 column
+
+5. **Consider button count** when designing layouts:
+   - 1-2 buttons: Inline or flexbox works fine
+   - 3-4 buttons: Use 2x2 grid
+   - 5+ buttons: Consider dropdown menu or 3-column grid
+
+6. **Add to design guidelines**:
+   ```markdown
+   ## Button Layout Best Practices
+
+   ### Report Card Download Buttons
+
+   The report cards display 4 download format buttons (HTML, PDF, DOCX, Markdown).
+
+   **Layout Strategy**:
+   - **Desktop**: 2x2 CSS Grid (50% width each)
+   - **Mobile**: Single column (100% width each)
+   - **No text wrapping**: `white-space: nowrap` prevents button text from breaking
+
+   **Why Grid Over Flexbox**:
+   - Flexbox with `flex: 1` and 4 buttons = 25% width each (too narrow)
+   - Grid with 2 columns = 50% width each (readable, clickable)
+   - Grid provides predictable, consistent sizing
+   ```
+
+7. **Add CSS lint rule** to catch flex layouts with many children:
+   ```yaml
+   # .stylelintrc.yml
+   rules:
+     selector-max-specificity: "0,3,0"
+     # Custom rule: Flag flex containers with 4+ direct children
+     # (Consider using grid instead)
+   ```
+
+### Related Issues
+
+This issue is related to **Issue #3 (Title Cleanup)** - both deal with visual presentation and user experience on the GitHub Pages index. Together they ensure:
+- Professional, clean titles (Issue #3)
+- Readable, clickable download buttons (Issue #4)
+
+---
+
 **End of Analysis**
